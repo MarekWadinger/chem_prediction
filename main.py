@@ -34,7 +34,9 @@ from ase.atoms import Atoms
 
 @st.experimental_memo
 def read_data(xyz_data_file):
-    return read_ase(xyz_data_file, index=":")
+    tfile = tempfile.NamedTemporaryFile(delete=False)
+    tfile.write(xyz_data_file.read())
+    return read_ase(tfile.name, index=":")
 
 
 def find_all_atoms(structures: list):
@@ -290,8 +292,6 @@ col1, col2 = st.columns(2)
 with col1:
   st.subheader('Data')
   data_file = st.file_uploader('Import data as .xyz file. Contains your sample molecules with properties.', '.xyz')
-  tfile = tempfile.NamedTemporaryFile(delete=False)
-  tfile.write(data_file.read())
 with col2:
   st.subheader('Pretrained model')
   model_file = st.file_uploader('Import pretrained model as json file. Without pretrained model app trains a new one.', '.zip')
@@ -312,7 +312,7 @@ with st.sidebar:
     st.title('Specify parameters')
 
 if data_file:
-    structures_list = read_data(tfile.name)
+    structures_list = read_data(data_file)
     p1.success("Number of systems in set: {}".format(len(structures_list)))
     property_name = box1.selectbox("Select Property", get_property_names(
                                    structures_list), index=0)
