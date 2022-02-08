@@ -30,11 +30,11 @@ import os
 # SUPPORT
 import time
 from typing import List
-from ase import atoms
+from ase.atoms import Atoms
 
 @st.experimental_memo
 def read_data(xyz_data_file):
-    return read_ase(xyz_data_file.name, index=":")
+    return read_ase(xyz_data_file, index=":")
 
 
 def find_all_atoms(structures: list):
@@ -63,7 +63,7 @@ def get_properties(structures: list, property_name: str):
 
 #@st.cache(suppress_st_warning=True)
 @st.experimental_memo
-def make_feature_vectors(_structures: List[atoms.Atoms], descriptor_name: str):
+def make_feature_vectors(_structures: List[Atoms], descriptor_name: str):
     if descriptor_name == "soap":
       soap = SOAP(
                   species=find_all_atoms(_structures),
@@ -285,10 +285,13 @@ st.set_page_config(**PAGE_CONFIG)
 
 st.title("""Prediction of chemical properties using regression analysis""")
 
+
 col1, col2 = st.columns(2)
 with col1:
   st.subheader('Data')
-  data_file = st.file_uploader('Import data as .xyz file. Contains your sample molecules with properties.')
+  data_file = st.file_uploader('Import data as .xyz file. Contains your sample molecules with properties.', '.xyz')
+  tfile = tempfile.NamedTemporaryFile(delete=False)
+  tfile.write(data_file.read())
 with col2:
   st.subheader('Pretrained model')
   model_file = st.file_uploader('Import pretrained model as json file. Without pretrained model app trains a new one.', '.zip')
@@ -301,6 +304,7 @@ with st.form(key='Model Parameters'):
     box1 = st.empty()
     box1.selectbox("Select Property", [""], index=0)
     submit_button = st.form_submit_button(label='Submit')
+
 p1 = st.empty()
 button1 = st.empty()
 
@@ -308,7 +312,7 @@ with st.sidebar:
     st.title('Specify parameters')
 
 if data_file:
-    structures_list = read_data(data_file)
+    structures_list = read_data(tfile.name)
     p1.success("Number of systems in set: {}".format(len(structures_list)))
     property_name = box1.selectbox("Select Property", get_property_names(
                                    structures_list), index=0)
