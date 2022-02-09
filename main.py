@@ -57,7 +57,7 @@ def find_max_atoms(structures: list):
 
 
 def get_positions(structures: list):
-    return [1] * len(structures)
+    return [[1] for i in range(len(structures))]
 
 
 def get_property_names(structures: list):
