@@ -13,7 +13,7 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 # BUILD NN
-import tensorflow-cpu as tf
+import tensorflow as tf
 # PLOT
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
