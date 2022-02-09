@@ -13,7 +13,7 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 # BUILD NN
-import tensorflow as tf
+import tensorflow-cpu as tf
 # PLOT
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -32,16 +32,11 @@ import time
 from typing import List
 from ase.atoms import Atoms
 
-# Streamlit Sharing has no GPU
-os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
-tf.config.set_visible_devices([], 'GPU')
-
-
 @st.experimental_memo
 def read_data(xyz_data_file):
-    tfile = tempfile.NamedTemporaryFile(delete=False)
-    tfile.write(xyz_data_file.read())
-    return read_ase(tfile.name, index=":")
+  tfile = tempfile.NamedTemporaryFile(delete=False)
+  tfile.write(data_file.read())
+  return read_ase(tfile.name, index=":")
 
 
 def find_all_atoms(structures: list):
@@ -316,44 +311,42 @@ button1 = st.empty()
 with st.sidebar:
     st.title('Specify parameters')
 
-with tf.device('/CPU:0'):
-  if data_file:
-      structures_list = read_data(data_file)
-      p1.success("Number of systems in set: {}".format(len(structures_list)))
-      property_name = box1.selectbox("Select Property", get_property_names(
-                                    structures_list), index=0)
+if data_file:
+    structures_list = read_data(tfile.name)
+    p1.success("Number of systems in set: {}".format(len(structures_list)))
+    property_name = box1.selectbox("Select Property", get_property_names(
+                                   structures_list), index=0)
 
-      if submit_button:
-          p1.info("Creating feature vectors")
-          feature_vectors = make_feature_vectors(structures_list, descriptor)
-          p1.success("Created {} features".format(feature_vectors.shape[1]))
-          chem_property = get_properties(structures_list, property_name)
-          X_train, X_test, X_val, Y_train, Y_test, Y_val = tt_split(
-              feature_vectors, chem_property)
-          n_epoch = 10; loss = "mse"; metrics = ["logcosh", "mae"]
+    if submit_button:
+        p1.info("Creating feature vectors")
+        feature_vectors = make_feature_vectors(structures_list, descriptor)
+        p1.success("Created {} features".format(feature_vectors.shape[1]))
+        chem_property = get_properties(structures_list, property_name)
+        X_train, X_test, X_val, Y_train, Y_test, Y_val = tt_split(
+            feature_vectors, chem_property)
+        n_epoch = 10; loss = "mse"; metrics = ["logcosh", "mae"]
 
-          if model_file:
-            model = load_model(model_file)
-            p1.success('Model Loaded Successfully')
-          else:
-            
-            model = compile_model(loss, metrics)
-            p1.info("Training model")
-            history = model.fit(X_train, Y_train, validation_data=(X_val, Y_val), 
-                        epochs=n_epoch, verbose=0)
-          st.subheader('Evaluate')
-          st.table(pd.DataFrame(columns=[loss] + metrics,
-              index=["train", "test", "validate"], 
-              data=[model.evaluate(X_train, Y_train, verbose=0),
-                    model.evaluate(X_test,  Y_test,  verbose=0),
-                    model.evaluate(X_val,   Y_val,   verbose=0)]))
-          p1.success('Success!')
-          st.plotly_chart(plot_performance(model.history, loss, metrics))
-          st.plotly_chart(plot_regression(inputs=X_train, predicted=model.predict(X_train), expected=Y_train))
-          save_model(model)
-          with open('my_model.h5.zip', 'rb') as f:
-            button1.download_button('Download Model', f, 'my_model.h5.zip', "application/zip")
+        if model_file:
+          model = load_model(model_file)
+          p1.success('Model Loaded Successfully')
+        else:
+          model = compile_model(loss, metrics)
+          p1.info("Training model")
+          history = model.fit(X_train, Y_train, validation_data=(X_val, Y_val), 
+                      epochs=n_epoch, verbose=0)
+        st.subheader('Evaluate')
+        st.table(pd.DataFrame(columns=[loss] + metrics,
+             index=["train", "test", "validate"], 
+             data=[model.evaluate(X_train, Y_train, verbose=0),
+                   model.evaluate(X_test,  Y_test,  verbose=0),
+                   model.evaluate(X_val,   Y_val,   verbose=0)]))
+        p1.success('Success!')
+        st.plotly_chart(plot_performance(model.history, loss, metrics))
+        st.plotly_chart(plot_regression(inputs=X_train, predicted=model.predict(X_train), expected=Y_train))
+        save_model(model)
+        with open('my_model.h5.zip', 'rb') as f:
+          button1.download_button('Download Model', f, 'my_model.h5.zip', "application/zip")
 
-  tf.keras.backend.clear_session()
-  time.sleep(1.2)
-  p1.empty()
+tf.keras.backend.clear_session()
+time.sleep(1.2)
+p1.empty()
