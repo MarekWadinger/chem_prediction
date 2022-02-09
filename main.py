@@ -34,6 +34,7 @@ from ase.atoms import Atoms
 
 # Streamlit Sharing has no GPU
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 tf.config.set_visible_devices([], 'GPU')
 
 @st.experimental_memo
@@ -162,7 +163,6 @@ def compile_model(loss, metrics):
   return model
 
 
-@st.experimental_singleton
 def plot_performance(_history, loss, metrics):
   num_plots = 1 + len(metrics)
   num_epochs = len(history.history["loss"])
@@ -206,7 +206,6 @@ def plot_performance(_history, loss, metrics):
   return fig
 
 
-@st.experimental_singleton
 def plot_regression(inputs, predicted, expected):
   mse = model.evaluate(inputs, expected)
   mse = round(mse[0],3)
@@ -331,6 +330,8 @@ with tf.device('/CPU:0'):
               feature_vectors, chem_property)
           n_epoch = 10; loss = "mse"; metrics = ["logcosh", "mae"]
 
+          st.subheader('Evaluate')
+          tab1 = st.empty()
           if model_file:
             model = load_model(model_file)
             p1.success('Model Loaded Successfully')
@@ -340,14 +341,13 @@ with tf.device('/CPU:0'):
             p1.info("Training model")
             history = model.fit(X_train, Y_train, validation_data=(X_val, Y_val), 
                         epochs=n_epoch, verbose=0)
-          st.subheader('Evaluate')
-          st.table(pd.DataFrame(columns=[loss] + metrics,
+            st.plotly_chart(plot_performance(model.history, loss, metrics))
+          tab1.table(pd.DataFrame(columns=[loss] + metrics,
               index=["train", "test", "validate"], 
               data=[model.evaluate(X_train, Y_train, verbose=0),
                     model.evaluate(X_test,  Y_test,  verbose=0),
                     model.evaluate(X_val,   Y_val,   verbose=0)]))
           p1.success('Success!')
-          st.plotly_chart(plot_performance(model.history, loss, metrics))
           st.plotly_chart(plot_regression(inputs=X_train, predicted=model.predict(X_train), expected=Y_train))
           save_model(model)
           with open('my_model.h5.zip', 'rb') as f:
