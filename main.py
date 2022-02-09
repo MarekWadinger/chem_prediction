@@ -301,7 +301,7 @@ with col2:
 
 st.subheader('Parameters')
 with st.form(key='Model Parameters'):
-    descriptors_list = ["soap", "cm", "acsf", "mbtr"]
+    descriptors_list = ["cm", "acsf"] #"soap", "mbtr" TODO: fix greedy tensorflow
     descriptor = st.selectbox("Select Descriptor", descriptors_list,
                               index=0)
     box1 = st.empty()
