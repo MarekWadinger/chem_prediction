@@ -37,7 +37,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 tf.config.set_visible_devices([], 'GPU')
 
-@st.experimental_memo
+@st.cache_data
 def read_data(xyz_data_file):
     tfile = tempfile.NamedTemporaryFile(delete=False)
     tfile.write(xyz_data_file.read())
@@ -69,7 +69,7 @@ def get_properties(structures: list, property_name: str):
 
 
 #@st.cache(suppress_st_warning=True)
-@st.experimental_memo
+@st.cache_data
 def make_feature_vectors(_structures: List[Atoms], descriptor_name: str):
     if descriptor_name == "soap":
       soap = SOAP(
