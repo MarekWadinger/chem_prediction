@@ -1,8 +1,9 @@
-numpy
-pandas
-dscribe
-ase
-streamlit
-plotly
-tensorflow
-scikit-learn
+ase==3.22.1
+dscribe==2.1.0
+numpy==1.26.1
+pandas==2.1.1
+plotly==5.18.0
+scikit-learn==1.3.2
+streamlit==1.27.2
+tensorflow-macos==2.14.0 ; sys_platform == 'darwin'
+tensorflow ; sys_platform == 'linux'
